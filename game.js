@@ -483,9 +483,17 @@ function resizeCanvas() {
     
     ctx.scale(dpr, dpr);
     
-    // Mobile-optimized hoop positioning
-    hoop.y = window.innerHeight * (isMobile ? 0.15 : 0.18);
-    hoop.baseY = hoop.y;
+    // Mobile-optimized hoop positioning - much more dynamic range
+    if (isMobile) {
+        // Vertical mobile: hoop can be much lower and vary more dramatically
+        hoop.y = window.innerHeight * (0.25 + Math.random() * 0.35); // Between 25% and 60% of screen
+        hoop.baseY = hoop.y;
+    } else {
+        // Desktop: keep original positioning
+        hoop.y = window.innerHeight * 0.18;
+        hoop.baseY = hoop.y;
+    }
+    
     if (hoop.x === 0) hoop.x = window.innerWidth / 2 - hoop.width / 2;
     
     createStars();
@@ -625,6 +633,12 @@ function startGame(mode) {
     hoop.patternTimer = 0;
     hoop.amplitude = 40 + Math.random() * 80; // More variation in movement range
     
+    // Mobile: Start with dynamic hoop positioning for power bar purpose
+    if (isMobile) {
+        hoop.y = window.innerHeight * (0.25 + Math.random() * 0.35); // Random start position
+        hoop.baseY = hoop.y;
+    }
+    
     document.getElementById('mainMenu').style.display = 'none';
     document.getElementById('gameOver').style.display = 'none';
     document.getElementById('shootingGuide').style.display = 'block';
@@ -656,8 +670,9 @@ function updateHoopMovement() {
             break;
             
         case 'vertical':
-            // Bouncing up and down while drifting
-            hoop.y = hoop.baseY + Math.sin(hoop.patternTimer * 2) * hoop.amplitude;
+            // Enhanced vertical movement - much more dramatic on mobile
+            const verticalRange = isMobile ? hoop.amplitude * 1.5 : hoop.amplitude;
+            hoop.y = hoop.baseY + Math.sin(hoop.patternTimer * 2) * verticalRange;
             hoop.x += hoop.speed * hoop.direction * 0.6;
             if (hoop.x <= 80 || hoop.x >= window.innerWidth - hoop.width - 80) {
                 hoop.direction *= -1;
@@ -666,13 +681,14 @@ function updateHoopMovement() {
             break;
             
         case 'figure8':
-            // Smooth figure-8 pattern across screen
+            // Smooth figure-8 pattern across screen with mobile depth variation
             hoop.x = (window.innerWidth / 2) + Math.sin(hoop.patternTimer) * (window.innerWidth * 0.3);
-            hoop.y = hoop.baseY + Math.sin(hoop.patternTimer * 2) * (hoop.amplitude * 0.8);
+            const depthVariation = isMobile ? hoop.amplitude * 1.2 : hoop.amplitude * 0.8;
+            hoop.y = hoop.baseY + Math.sin(hoop.patternTimer * 2) * depthVariation;
             break;
             
         case 'random':
-            // Chaotic movement - changes direction randomly
+            // Chaotic movement with mobile depth changes
             if (Math.random() < 0.03) {
                 hoop.speed = 2 + Math.random() * 5;
                 hoop.direction = Math.random() > 0.5 ? 1 : -1;
@@ -682,45 +698,49 @@ function updateHoopMovement() {
                 hoop.direction *= -1;
                 hoop.x = Math.max(80, Math.min(window.innerWidth - hoop.width - 80, hoop.x));
             }
-            // Random vertical movement too
+            // Enhanced random vertical movement on mobile
             if (Math.random() < 0.02) {
-                hoop.y = hoop.baseY + (Math.random() - 0.5) * hoop.amplitude * 1.5;
+                const maxDepth = isMobile ? window.innerHeight * 0.4 : hoop.amplitude * 1.5;
+                hoop.y = hoop.baseY + (Math.random() - 0.5) * maxDepth;
             }
             break;
             
         case 'spiral':
-            // NEW: Spiral movement pattern
+            // Spiral with mobile depth variation
             const spiralRadius = Math.min(window.innerWidth, window.innerHeight) * 0.25;
             hoop.x = (window.innerWidth / 2) + Math.cos(hoop.patternTimer) * spiralRadius * Math.sin(hoop.patternTimer * 0.3);
-            hoop.y = hoop.baseY + Math.sin(hoop.patternTimer) * spiralRadius * 0.3 * Math.cos(hoop.patternTimer * 0.2);
+            const spiralDepth = isMobile ? spiralRadius * 0.5 : spiralRadius * 0.3;
+            hoop.y = hoop.baseY + Math.sin(hoop.patternTimer) * spiralDepth * Math.cos(hoop.patternTimer * 0.2);
             break;
             
         case 'zigzag':
-            // NEW: Sharp zigzag pattern with better bounds
+            // Sharp zigzag with mobile depth changes
             const zigzagSpeed = 4;
             const zigzagTime = Math.floor(hoop.patternTimer * 3) % 4;
+            const depthMultiplier = isMobile ? 1.5 : 0.5;
             switch(zigzagTime) {
-                case 0: hoop.x += zigzagSpeed; hoop.y -= zigzagSpeed * 0.5; break;
-                case 1: hoop.x += zigzagSpeed; hoop.y += zigzagSpeed * 0.5; break;
-                case 2: hoop.x -= zigzagSpeed; hoop.y += zigzagSpeed * 0.5; break;
-                case 3: hoop.x -= zigzagSpeed; hoop.y -= zigzagSpeed * 0.5; break;
+                case 0: hoop.x += zigzagSpeed; hoop.y -= zigzagSpeed * depthMultiplier; break;
+                case 1: hoop.x += zigzagSpeed; hoop.y += zigzagSpeed * depthMultiplier; break;
+                case 2: hoop.x -= zigzagSpeed; hoop.y += zigzagSpeed * depthMultiplier; break;
+                case 3: hoop.x -= zigzagSpeed; hoop.y -= zigzagSpeed * depthMultiplier; break;
             }
             // Enhanced bounds checking to prevent corner freezing
             if (hoop.x <= 80 || hoop.x >= window.innerWidth - hoop.width - 80) {
                 hoop.patternTimer += 1; // Force direction change
                 hoop.x = Math.max(80, Math.min(window.innerWidth - hoop.width - 80, hoop.x));
             }
-            if (hoop.y <= hoop.baseY - 60 || hoop.y >= hoop.baseY + 60) {
-                hoop.y = Math.max(hoop.baseY - 60, Math.min(hoop.baseY + 60, hoop.y));
-            }
             break;
             
         case 'teleport':
-            // NEW: Teleporting hoop! Disappears and reappears
+            // Teleporting with mobile depth variation
             if (Math.floor(hoop.patternTimer * 2) % 6 === 0 && Math.random() < 0.05) {
-                // Teleport to random location with safe bounds
+                // Teleport to random location with depth on mobile
                 hoop.x = 120 + Math.random() * (window.innerWidth - hoop.width - 240);
-                hoop.y = hoop.baseY + (Math.random() - 0.5) * hoop.amplitude;
+                if (isMobile) {
+                    hoop.y = window.innerHeight * (0.2 + Math.random() * 0.5); // Wide depth range
+                } else {
+                    hoop.y = hoop.baseY + (Math.random() - 0.5) * hoop.amplitude;
+                }
                 
                 // Visual effect for teleport
                 createScoreEffect(hoop.x + hoop.width/2, hoop.y, false);
@@ -729,33 +749,42 @@ function updateHoopMovement() {
             break;
             
         case 'orbit':
-            // NEW: Orbits around center of screen
+            // Orbit with mobile depth variation
             const orbitRadius = Math.min(window.innerWidth, window.innerHeight) * 0.22;
             const centerX = window.innerWidth / 2;
             const centerY = hoop.baseY;
             hoop.x = centerX + Math.cos(hoop.patternTimer * 1.5) * orbitRadius - hoop.width/2;
-            hoop.y = centerY + Math.sin(hoop.patternTimer * 1.5) * orbitRadius * 0.6;
+            const orbitDepth = isMobile ? orbitRadius * 0.8 : orbitRadius * 0.6;
+            hoop.y = centerY + Math.sin(hoop.patternTimer * 1.5) * orbitDepth;
             break;
             
         case 'earthquake':
-            // NEW: Violent shaking movement with bounds
+            // Earthquake with mobile depth variation
             const baseX = window.innerWidth / 2 - hoop.width / 2;
             hoop.x = Math.max(80, Math.min(window.innerWidth - hoop.width - 80, baseX + (Math.random() - 0.5) * 80));
-            hoop.y = hoop.baseY + (Math.random() - 0.5) * 40;
+            const quakeDepth = isMobile ? 60 : 40;
+            hoop.y = hoop.baseY + (Math.random() - 0.5) * quakeDepth;
             // Add screen shake effect
             screenShake = Math.max(screenShake, 3);
             break;
             
         case 'wave':
-            // NEW: Smooth wave motion across screen
+            // Wave with mobile depth variation
             hoop.x = 80 + (Math.sin(hoop.patternTimer) + 1) * (window.innerWidth - hoop.width - 160) / 2;
-            hoop.y = hoop.baseY + Math.sin(hoop.patternTimer * 3) * hoop.amplitude * 0.4;
+            const waveDepth = isMobile ? hoop.amplitude * 0.8 : hoop.amplitude * 0.4;
+            hoop.y = hoop.baseY + Math.sin(hoop.patternTimer * 3) * waveDepth;
             break;
     }
     
-    // Enhanced bounds checking to prevent corner freezing
+    // Enhanced mobile bounds checking with wider depth range
     hoop.x = Math.max(80, Math.min(window.innerWidth - hoop.width - 80, hoop.x));
-    hoop.y = Math.max(80, Math.min(window.innerHeight * 0.5, hoop.y));
+    if (isMobile) {
+        // Mobile: Allow hoop much lower and higher for power bar usage
+        hoop.y = Math.max(100, Math.min(window.innerHeight * 0.75, hoop.y));
+    } else {
+        // Desktop: Keep reasonable bounds
+        hoop.y = Math.max(80, Math.min(window.innerHeight * 0.5, hoop.y));
+    }
 }
 
 function endGame() {
@@ -1125,52 +1154,144 @@ function drawAimLine() {
 function drawShooter() {
     const shooterX = window.innerWidth / 2;
     const shooterY = window.innerHeight - (isMobile ? 80 : 60);
-    const shooterRadius = isMobile ? 40 : 35;
+    const shooterRadius = isMobile ? 45 : 35; // Slightly larger for enhanced styling
     
-    // Simplified shooter platform
+    // Enhanced PHI shooter with Eagles/Philly theme
     if (isJawnMode) {
+        // Jawn mode: Mega enhanced styling
         ctx.shadowColor = '#00ff88';
-        ctx.shadowBlur = 15; // Reduced glow
+        ctx.shadowBlur = 25;
+        
+        // Multiple gradient rings for depth
+        const jawnGradient = ctx.createRadialGradient(
+            shooterX - 10, shooterY - 10, 0,
+            shooterX, shooterY, shooterRadius + 15
+        );
+        jawnGradient.addColorStop(0, '#ffffff');
+        jawnGradient.addColorStop(0.3, '#00ff88');
+        jawnGradient.addColorStop(0.6, '#004C54');
+        jawnGradient.addColorStop(1, '#00ff88');
+        
+        ctx.fillStyle = jawnGradient;
+        ctx.beginPath();
+        ctx.arc(shooterX, shooterY, shooterRadius + 8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Jawn mode rotating energy rings - more dramatic
+        const time = Date.now() * 0.005;
+        for (let i = 0; i < 3; i++) {
+            ctx.strokeStyle = `rgba(0, 255, 136, ${0.6 - i * 0.2})`;
+            ctx.lineWidth = 4;
+            ctx.setLineDash([12, 8]);
+            ctx.beginPath();
+            ctx.arc(shooterX, shooterY, shooterRadius + 15 + i * 15 + Math.sin(time + i) * 8, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        
+    } else {
+        // Regular mode: Enhanced Eagles-themed styling
+        ctx.shadowColor = '#004C54';
+        ctx.shadowBlur = 20;
+        
+        // Eagles color gradient
+        const eaglesGradient = ctx.createRadialGradient(
+            shooterX - 8, shooterY - 8, 0,
+            shooterX, shooterY, shooterRadius + 5
+        );
+        eaglesGradient.addColorStop(0, '#00ff88');
+        eaglesGradient.addColorStop(0.4, '#004C54');
+        eaglesGradient.addColorStop(0.7, '#A5ACAF');
+        eaglesGradient.addColorStop(1, '#004C54');
+        
+        ctx.fillStyle = eaglesGradient;
+        ctx.beginPath();
+        ctx.arc(shooterX, shooterY, shooterRadius + 3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Subtle rotating ring for regular mode
+        const time = Date.now() * 0.003;
+        ctx.strokeStyle = 'rgba(0, 255, 136, 0.4)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.arc(shooterX, shooterY, shooterRadius + 12 + Math.sin(time) * 4, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
     }
     
-    // Simplified shooter gradient
-    ctx.fillStyle = isJawnMode ? '#00ff88' : '#00cc6a';
+    // Main shooter circle with enhanced border
+    const mainGradient = ctx.createRadialGradient(
+        shooterX - 6, shooterY - 6, 0,
+        shooterX, shooterY, shooterRadius
+    );
+    
+    if (isJawnMode) {
+        mainGradient.addColorStop(0, '#ffffff');
+        mainGradient.addColorStop(0.5, '#00ff88');
+        mainGradient.addColorStop(1, '#004C54');
+    } else {
+        mainGradient.addColorStop(0, '#00ff88');
+        mainGradient.addColorStop(0.6, '#004C54');
+        mainGradient.addColorStop(1, '#002d30');
+    }
+    
+    ctx.fillStyle = mainGradient;
     ctx.beginPath();
     ctx.arc(shooterX, shooterY, shooterRadius, 0, Math.PI * 2);
     ctx.fill();
     
-    // Jawn mode effects - simplified
-    if (isJawnMode) {
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = isMobile ? 6 : 5;
-        ctx.setLineDash([8, 8]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        
-        // Simplified rotating energy rings
-        const time = Date.now() * 0.003; // Slower rotation
-        for (let i = 0; i < 2; i++) { // Reduced from 3 to 2 rings
-            ctx.strokeStyle = `rgba(0, 255, 136, ${0.3 - i * 0.15})`;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(shooterX, shooterY, shooterRadius + 5 + i * 12 + Math.sin(time + i) * 3, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-    }
-    
-    // Shooter outline
+    // Enhanced border with multiple layers
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = isMobile ? 5 : 4;
+    
+    // Outer border - Eagles silver
+    ctx.strokeStyle = '#A5ACAF';
+    ctx.lineWidth = isMobile ? 6 : 5;
     ctx.beginPath();
     ctx.arc(shooterX, shooterY, shooterRadius, 0, Math.PI * 2);
     ctx.stroke();
     
-    // Philadelphia logo/text - larger for mobile
-    ctx.fillStyle = '#000';
-    ctx.font = `bold ${isMobile ? 20 : 16}px Arial`;
+    // Inner border - White highlight
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.lineWidth = isMobile ? 3 : 2;
+    ctx.beginPath();
+    ctx.arc(shooterX, shooterY, shooterRadius - 2, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Philadelphia text with enhanced styling
+    ctx.fillStyle = isJawnMode ? '#004C54' : '#ffffff';
+    ctx.font = `bold ${isMobile ? 24 : 20}px Arial Black`;
     ctx.textAlign = 'center';
-    ctx.fillText('PHI', shooterX, shooterY + (isMobile ? 7 : 5));
+    ctx.strokeStyle = isJawnMode ? '#ffffff' : '#000000';
+    ctx.lineWidth = 2;
+    
+    // Text shadow for better visibility
+    if (isJawnMode) {
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+    } else {
+        ctx.shadowColor = '#000000';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+    }
+    
+    // Draw text with outline
+    ctx.strokeText('PHI', shooterX, shooterY + (isMobile ? 8 : 6));
+    ctx.fillText('PHI', shooterX, shooterY + (isMobile ? 8 : 6));
+    
+    // Reset shadow
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Add Eagles emoji for extra flair in Jawn mode
+    if (isJawnMode) {
+        ctx.font = `${isMobile ? 20 : 16}px Arial`;
+        ctx.fillText('🦅', shooterX + shooterRadius - 10, shooterY - shooterRadius + 15);
+    }
 }
 
 // Optimized game loop with frame rate limiting
