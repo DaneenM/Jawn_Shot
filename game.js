@@ -1,3 +1,4 @@
+console.log("Game.js loaded successfully!");
 // Game state variables
 let gameState = 'menu';
 let gameMode = 'solo';
