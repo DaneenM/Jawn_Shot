@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jawn Shot 🏀</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui">
+            <div id="gameInfo">
+                <div id="score">Score: <span id="scoreValue">0</span></div>
+                <div id="streakIndicator" class="streak-indicator" style="display: none;">
+                    STREAK: <span id="streakCount">0</span> 🔥
+                </div>
+                <div id="timer">Time: <span id="timerValue">3:00</span></div>
+            </div>
+        </div>
+
+        <div id="shootingGuide" style="display: none;">
+            Drag to aim • Release to shoot 🏀
+        </div>
+
+        <div id="centerUI">
+            <div id="mainMenu" class="menu">
+                <h1>🏀 JAWN SHOT 🏀</h1>
+                <h2>Philly's Finest Basketball Experience</h2>
+                <button class="btn" onclick="startGame('solo')">Solo Jawn</button>
+                <button class="btn" onclick="startGame('vs')">VS Mode</button>
+            </div>
+
+            <div id="gameOver" class="menu" style="display: none;">
+                <h1 id="gameOverTitle">GAME OVER</h1>
+                <h2 id="finalScore"></h2>
+                <div id="gameOverMessage"></div>
+                <button class="btn" onclick="showMainMenu()">Play Again</button>
+            </div>
+        </div>
+
+        <div id="soundBubble"></div>
+        <div id="memeBubble"></div>
+    </div>
+
+    <script src="/game.js"></script>
+</body>
+</html>

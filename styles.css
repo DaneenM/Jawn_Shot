@@ -1,0 +1,566 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #0a1f2e 0%, #004C54 15%, #1a4b3a 35%, #2d1b3d 65%, #1e3a5f 85%, #004225 100%);
+    background-size: 600% 600%;
+    animation: gradientShift 12s ease infinite;
+    overflow: hidden;
+    touch-action: manipulation;
+    position: relative;
+}
+
+/* Enhanced background animation with more Eagles colors */
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    25% { background-position: 100% 25%; }
+    50% { background-position: 100% 75%; }
+    75% { background-position: 50% 100%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Floating basketball animation */
+body::before {
+    content: '🏀';
+    position: absolute;
+    font-size: 30px;
+    animation: floatBasketball 15s linear infinite;
+    z-index: 1;
+    opacity: 0.3;
+}
+
+@keyframes floatBasketball {
+    0% { 
+        transform: translateX(-50px) translateY(100vh) rotate(0deg);
+        opacity: 0;
+    }
+    10% { opacity: 0.3; }
+    90% { opacity: 0.3; }
+    100% { 
+        transform: translateX(calc(100vw + 50px)) translateY(-50px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+#gameContainer {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    touch-action: none;
+}
+
+#ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    color: white;
+    padding: 20px;
+}
+
+#gameInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 22px;
+    font-weight: 600;
+    text-shadow: 0 0 15px rgba(0,255,136,0.7);
+}
+
+#score {
+    background: linear-gradient(135deg, rgba(0,255,136,0.25), rgba(0,76,84,0.2));
+    backdrop-filter: blur(15px);
+    border: 2px solid rgba(0,255,136,0.4);
+    padding: 12px 24px;
+    border-radius: 30px;
+    box-shadow: 0 10px 40px rgba(0,255,136,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+#score::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+#timer {
+    background: linear-gradient(135deg, rgba(255,107,53,0.25), rgba(0,66,37,0.2));
+    backdrop-filter: blur(15px);
+    border: 2px solid rgba(255,107,53,0.4);
+    padding: 12px 24px;
+    border-radius: 30px;
+    box-shadow: 0 10px 40px rgba(255,107,53,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+#timer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shimmer 4s infinite reverse;
+}
+
+#centerUI {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 200;
+}
+
+.menu {
+    background: rgba(10, 31, 46, 0.9);
+    backdrop-filter: blur(25px);
+    padding: 50px;
+    border-radius: 40px;
+    border: 3px solid rgba(0,255,136,0.4);
+    box-shadow: 
+        0 25px 80px rgba(0,0,0,0.4), 
+        0 0 60px rgba(0,255,136,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+    animation: menuGlow 4s ease-in-out infinite alternate;
+}
+
+@keyframes menuGlow {
+    from { 
+        box-shadow: 
+            0 25px 80px rgba(0,0,0,0.4), 
+            0 0 60px rgba(0,255,136,0.15),
+            inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    to { 
+        box-shadow: 
+            0 25px 80px rgba(0,0,0,0.4), 
+            0 0 80px rgba(0,255,136,0.25),
+            inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+}
+
+.menu::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0,255,136,0.03), rgba(0,66,37,0.03));
+    border-radius: 40px;
+    animation: menuShine 6s ease-in-out infinite;
+}
+
+@keyframes menuShine {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+}
+
+.menu h1 {
+    background: linear-gradient(135deg, #00ff88 0%, #ffffff 25%, #004C54 50%, #00ff88 75%, #ffffff 100%);
+    background-size: 300% 300%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 56px;
+    margin-bottom: 10px;
+    font-weight: 900;
+    text-shadow: 0 0 40px rgba(0,255,136,0.6);
+    animation: titleGradient 4s ease infinite, titleBounce 2s ease-in-out infinite alternate;
+    position: relative;
+    z-index: 1;
+}
+
+.menu h1::before {
+    content: '🏀 JAWN SHOT 🦅';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #00ff88, #ffffff, #004C54);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0;
+    animation: titleFlash 3s ease-in-out infinite;
+}
+
+@keyframes titleGradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes titleBounce {
+    from { transform: scale(1); }
+    to { transform: scale(1.02); }
+}
+
+@keyframes titleFlash {
+    0%, 90%, 100% { opacity: 0; }
+    95% { opacity: 0.3; }
+}
+
+.menu h2 {
+    color: rgba(255,255,255,0.95);
+    font-size: 22px;
+    margin-bottom: 35px;
+    font-weight: 500;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    animation: subtitleGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes subtitleGlow {
+    from { text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+    to { text-shadow: 0 2px 20px rgba(0,255,136,0.2); }
+}
+
+.btn {
+    background: linear-gradient(135deg, #00ff88 0%, #00cc6a 50%, #004C54 100%);
+    color: #0a1f2e;
+    border: none;
+    padding: 20px 45px;
+    margin: 15px;
+    border-radius: 35px;
+    font-size: 19px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 10px 30px rgba(0,255,136,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    position: relative;
+    overflow: hidden;
+    transform-style: preserve-3d;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s;
+}
+
+.btn:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 
+        0 15px 45px rgba(0,255,136,0.5),
+        0 5px 15px rgba(0,66,37,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+    background: linear-gradient(135deg, #00ff88 0%, #004C54 50%, #00ff88 100%);
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn:active {
+    transform: translateY(-2px) scale(1.02);
+    transition: all 0.1s;
+}
+
+/* Eagles-themed button variant */
+.btn.eagles {
+    background: linear-gradient(135deg, #004C54 0%, #00ff88 50%, #A5ACAF 100%);
+    color: white;
+}
+
+.btn.eagles:hover {
+    background: linear-gradient(135deg, #00ff88 0%, #004C54 50%, #A5ACAF 100%);
+    color: #0a1f2e;
+}
+
+#soundBubble {
+    position: absolute;
+    background: linear-gradient(135deg, rgba(0,255,136,0.98), rgba(255,255,255,0.95));
+    color: #0a1f2e;
+    padding: 18px 30px;
+    border-radius: 30px;
+    font-size: 26px;
+    font-weight: 800;
+    pointer-events: none;
+    transform: scale(0);
+    transition: all 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    border: 3px solid rgba(0,255,136,0.6);
+    backdrop-filter: blur(15px);
+    box-shadow: 
+        0 15px 40px rgba(0,255,136,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+    z-index: 150;
+    animation: bubblePulse 0.6s ease-in-out;
+}
+
+@keyframes bubblePulse {
+    0%, 100% { transform: scale(0); }
+    50% { transform: scale(1.1); }
+}
+
+#memeBubble {
+    position: absolute;
+    background: linear-gradient(135deg, rgba(255,107,53,0.98), rgba(247,147,30,0.95), rgba(0,66,37,0.1));
+    color: white;
+    padding: 28px;
+    border-radius: 30px;
+    font-size: 24px;
+    font-weight: 800;
+    pointer-events: none;
+    transform: scale(0);
+    transition: all 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    border: 3px solid rgba(255,255,255,0.4);
+    backdrop-filter: blur(20px);
+    box-shadow: 
+        0 20px 50px rgba(255,107,53,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+    max-width: 380px;
+    text-align: center;
+    z-index: 150;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.streak-indicator {
+    position: absolute;
+    top: 110px;
+    right: 25px;
+    background: linear-gradient(135deg, rgba(255,107,53,0.95), rgba(247,147,30,0.9), rgba(0,66,37,0.1));
+    color: white;
+    padding: 15px 22px;
+    border-radius: 25px;
+    font-weight: 800;
+    z-index: 100;
+    backdrop-filter: blur(15px);
+    border: 2px solid rgba(255,255,255,0.3);
+    box-shadow: 
+        0 10px 35px rgba(255,107,53,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+    animation: streakBounce 1s ease-in-out infinite alternate, streakGlow 2s ease-in-out infinite;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.3);
+}
+
+@keyframes streakBounce {
+    from { transform: scale(1) rotateZ(-1deg); }
+    to { transform: scale(1.08) rotateZ(1deg); }
+}
+
+@keyframes streakGlow {
+    0%, 100% { 
+        box-shadow: 
+            0 10px 35px rgba(255,107,53,0.4),
+            inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    50% { 
+        box-shadow: 
+            0 15px 45px rgba(255,107,53,0.6),
+            0 0 30px rgba(0,255,136,0.3),
+            inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+}
+
+#shootingGuide {
+    position: absolute;
+    bottom: 200px; /* Moved much higher to avoid power meter */
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.9);
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    z-index: 100;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(15px);
+    padding: 12px 25px;
+    border-radius: 25px;
+    border: 2px solid rgba(255,255,255,0.3);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    animation: guideFloat 3s ease-in-out infinite alternate;
+    max-width: 280px; /* Prevent text from being too wide */
+}
+
+@keyframes guideFloat {
+    from { transform: translateX(-50%) translateY(0px); }
+    to { transform: translateX(-50%) translateY(-3px); }
+}
+
+/* Enhanced PHI shooter button styling */
+.phi-shooter {
+    background: linear-gradient(135deg, #00ff88 0%, #004C54 50%, #00cc6a 100%);
+    border: 4px solid rgba(255,255,255,0.8);
+    box-shadow: 
+        0 0 30px rgba(0,255,136,0.6),
+        0 8px 25px rgba(0,0,0,0.3),
+        inset 0 2px 10px rgba(255,255,255,0.2);
+    animation: shooterPulse 2s ease-in-out infinite alternate;
+    position: relative;
+    overflow: hidden;
+}
+
+.phi-shooter::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(transparent, rgba(255,255,255,0.3), transparent);
+    animation: shooterSpin 4s linear infinite;
+    z-index: 0;
+}
+
+.phi-shooter-text {
+    position: relative;
+    z-index: 1;
+    color: #0a1f2e;
+    font-weight: 900;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.5);
+    font-size: 18px;
+}
+
+@keyframes shooterPulse {
+    from { 
+        transform: scale(1);
+        box-shadow: 
+            0 0 30px rgba(0,255,136,0.6),
+            0 8px 25px rgba(0,0,0,0.3),
+            inset 0 2px 10px rgba(255,255,255,0.2);
+    }
+    to { 
+        transform: scale(1.05);
+        box-shadow: 
+            0 0 40px rgba(0,255,136,0.8),
+            0 0 20px rgba(255,255,255,0.4),
+            0 12px 35px rgba(0,0,0,0.4),
+            inset 0 2px 15px rgba(255,255,255,0.3);
+    }
+}
+
+@keyframes shooterSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Basketball trail enhancement */
+.basketball-trail {
+    filter: drop-shadow(0 0 8px rgba(255,107,53,0.6));
+    animation: ballGlow 1s ease-in-out infinite alternate;
+}
+
+@keyframes ballGlow {
+    from { filter: drop-shadow(0 0 8px rgba(255,107,53,0.6)); }
+    to { filter: drop-shadow(0 0 15px rgba(255,107,53,0.9)); }
+}
+}
+
+/* Philadelphia-themed additions */
+.philly-accent {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 20px;
+    opacity: 0.6;
+    animation: phillyPulse 4s ease-in-out infinite;
+}
+
+@keyframes phillyPulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* Enhanced mobile responsiveness */
+@media (max-width: 480px) {
+    .menu { padding: 35px; }
+    .menu h1 { font-size: 44px; }
+    .menu h2 { font-size: 19px; }
+    .btn { 
+        font-size: 17px; 
+        padding: 18px 35px; 
+        margin: 12px 8px;
+    }
+    #gameInfo { 
+        font-size: 19px; 
+        padding: 18px; 
+    }
+    #shootingGuide { 
+        font-size: 14px; 
+        bottom: 180px; /* Adjusted for mobile */
+        padding: 10px 20px;
+        max-width: 260px;
+    }
+    .streak-indicator {
+        top: 90px;
+        right: 15px;
+        padding: 12px 18px;
+        font-size: 14px;
+    }
+    .phi-shooter {
+        width: 80px !important;
+        height: 80px !important;
+    }
+    .phi-shooter-text {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 360px) {
+    .menu h1 { font-size: 38px; }
+    .btn { font-size: 15px; padding: 15px 28px; }
+    #shootingGuide { 
+        bottom: 160px;
+        font-size: 13px;
+        max-width: 240px;
+    }
+    .phi-shooter {
+        width: 70px !important;
+        height: 70px !important;
+    }
+    .phi-shooter-text {
+        font-size: 14px;
+    }
+}
+
+/* Easter egg - Fly Eagles Fly animation */
+@keyframes flyEaglesFly {
+    0% { transform: translateX(-100px) rotate(-10deg); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateX(calc(100vw + 100px)) rotate(10deg); opacity: 0; }
+}
+
+.eagles-fly {
+    position: fixed;
+    top: 15%;
+    font-size: 40px;
+    z-index: 0;
+    animation: flyEaglesFly 8s linear infinite;
+    animation-delay: 10s;
+}
