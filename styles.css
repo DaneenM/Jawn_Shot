@@ -418,9 +418,25 @@ canvas {
     border-radius: 25px;
     border: 2px solid rgba(255,255,255,0.3);
     box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    animation: guideFloat 3s ease-in-out infinite alternate;
+    animation: guideFloat 3s ease-in-out infinite alternate, guideAutoHide 6s ease-in-out forwards;
     max-width: 280px; /* Prevent text from being too wide */
     pointer-events: none; /* Allow clicks to pass through to hoop */
+}
+
+@keyframes guideAutoHide {
+    0% { 
+        opacity: 1;
+        transform: translateX(-50%) translateY(0px);
+    }
+    80% { 
+        opacity: 1;
+        transform: translateX(-50%) translateY(0px);
+    }
+    100% { 
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+        visibility: hidden;
+    }
 }
 
 @keyframes guideFloat {
