@@ -337,25 +337,45 @@ class Ball {
     }
 
     checkCollision() {
-        // More generous scoring zone
+        // Enhanced collision detection - ball can go through hoop cleanly
         const hoopCenterX = hoop.x + hoop.width / 2;
         const hoopCenterY = hoop.y;
+        const hoopLeft = hoop.x + 20;
+        const hoopRight = hoop.x + hoop.width - 20;
         
-        if (!this.hasScored && 
-            this.y >= hoopCenterY - 15 && this.y <= hoopCenterY + 45 &&
-            this.x >= hoop.x + 20 && this.x <= hoop.x + hoop.width - 20 &&
-            this.vy > 0) {
-            
-            this.hasScored = true;
-            
-            // Check for perfect shot (center of hoop)
-            const distanceFromCenter = Math.abs(this.x - hoopCenterX);
-            if (distanceFromCenter < 30) {
-                this.isPerfectShot = true;
-                perfectShotBonus = true;
+        if (!this.hasScored && this.vy > 0) {
+            // Check if ball goes through hoop cleanly (from above)
+            if (this.y >= hoopCenterY - 25 && this.y <= hoopCenterY + 15 &&
+                this.x >= hoopLeft && this.x <= hoopRight &&
+                this.y - this.radius <= hoopCenterY) {
+                
+                this.hasScored = true;
+                
+                // Check for perfect shot (center of hoop)
+                const distanceFromCenter = Math.abs(this.x - hoopCenterX);
+                if (distanceFromCenter < 25) {
+                    this.isPerfectShot = true;
+                    perfectShotBonus = true;
+                }
+                
+                return true;
             }
             
-            return true;
+            // Also check traditional rim bouncing scoring zone
+            if (this.y >= hoopCenterY - 15 && this.y <= hoopCenterY + 45 &&
+                this.x >= hoopLeft && this.x <= hoopRight) {
+                
+                this.hasScored = true;
+                
+                // Check for perfect shot (center of hoop)
+                const distanceFromCenter = Math.abs(this.x - hoopCenterX);
+                if (distanceFromCenter < 30) {
+                    this.isPerfectShot = true;
+                    perfectShotBonus = true;
+                }
+                
+                return true;
+            }
         }
         return false;
     }
@@ -625,11 +645,13 @@ function updateHoopMovement() {
     
     switch(hoop.pattern) {
         case 'horizontal':
-            // Classic left-right with speed variation
+            // Classic left-right with speed variation and better bounds
             hoop.x += hoop.speed * hoop.direction;
-            if (hoop.x <= 50 || hoop.x >= window.innerWidth - hoop.width - 50) {
+            if (hoop.x <= 80 || hoop.x >= window.innerWidth - hoop.width - 80) {
                 hoop.direction *= -1;
-                hoop.speed = 2 + Math.random() * 3; // Random speed changes
+                hoop.speed = 2 + Math.random() * 3;
+                // Ensure hoop doesn't get stuck in corners
+                hoop.x = Math.max(80, Math.min(window.innerWidth - hoop.width - 80, hoop.x));
             }
             break;
             
@@ -637,14 +659,15 @@ function updateHoopMovement() {
             // Bouncing up and down while drifting
             hoop.y = hoop.baseY + Math.sin(hoop.patternTimer * 2) * hoop.amplitude;
             hoop.x += hoop.speed * hoop.direction * 0.6;
-            if (hoop.x <= 50 || hoop.x >= window.innerWidth - hoop.width - 50) {
+            if (hoop.x <= 80 || hoop.x >= window.innerWidth - hoop.width - 80) {
                 hoop.direction *= -1;
+                hoop.x = Math.max(80, Math.min(window.innerWidth - hoop.width - 80, hoop.x));
             }
             break;
             
         case 'figure8':
             // Smooth figure-8 pattern across screen
-            hoop.x = (window.innerWidth / 2) + Math.sin(hoop.patternTimer) * (window.innerWidth * 0.35);
+            hoop.x = (window.innerWidth / 2) + Math.sin(hoop.patternTimer) * (window.innerWidth * 0.3);
             hoop.y = hoop.baseY + Math.sin(hoop.patternTimer * 2) * (hoop.amplitude * 0.8);
             break;
             
@@ -655,8 +678,9 @@ function updateHoopMovement() {
                 hoop.direction = Math.random() > 0.5 ? 1 : -1;
             }
             hoop.x += hoop.speed * hoop.direction;
-            if (hoop.x <= 50 || hoop.x >= window.innerWidth - hoop.width - 50) {
+            if (hoop.x <= 80 || hoop.x >= window.innerWidth - hoop.width - 80) {
                 hoop.direction *= -1;
+                hoop.x = Math.max(80, Math.min(window.innerWidth - hoop.width - 80, hoop.x));
             }
             // Random vertical movement too
             if (Math.random() < 0.02) {
@@ -666,13 +690,13 @@ function updateHoopMovement() {
             
         case 'spiral':
             // NEW: Spiral movement pattern
-            const spiralRadius = Math.min(window.innerWidth, window.innerHeight) * 0.3;
+            const spiralRadius = Math.min(window.innerWidth, window.innerHeight) * 0.25;
             hoop.x = (window.innerWidth / 2) + Math.cos(hoop.patternTimer) * spiralRadius * Math.sin(hoop.patternTimer * 0.3);
             hoop.y = hoop.baseY + Math.sin(hoop.patternTimer) * spiralRadius * 0.3 * Math.cos(hoop.patternTimer * 0.2);
             break;
             
         case 'zigzag':
-            // NEW: Sharp zigzag pattern
+            // NEW: Sharp zigzag pattern with better bounds
             const zigzagSpeed = 4;
             const zigzagTime = Math.floor(hoop.patternTimer * 3) % 4;
             switch(zigzagTime) {
@@ -681,9 +705,10 @@ function updateHoopMovement() {
                 case 2: hoop.x -= zigzagSpeed; hoop.y += zigzagSpeed * 0.5; break;
                 case 3: hoop.x -= zigzagSpeed; hoop.y -= zigzagSpeed * 0.5; break;
             }
-            // Bounds checking
-            if (hoop.x <= 50 || hoop.x >= window.innerWidth - hoop.width - 50) {
+            // Enhanced bounds checking to prevent corner freezing
+            if (hoop.x <= 80 || hoop.x >= window.innerWidth - hoop.width - 80) {
                 hoop.patternTimer += 1; // Force direction change
+                hoop.x = Math.max(80, Math.min(window.innerWidth - hoop.width - 80, hoop.x));
             }
             if (hoop.y <= hoop.baseY - 60 || hoop.y >= hoop.baseY + 60) {
                 hoop.y = Math.max(hoop.baseY - 60, Math.min(hoop.baseY + 60, hoop.y));
@@ -693,8 +718,8 @@ function updateHoopMovement() {
         case 'teleport':
             // NEW: Teleporting hoop! Disappears and reappears
             if (Math.floor(hoop.patternTimer * 2) % 6 === 0 && Math.random() < 0.05) {
-                // Teleport to random location
-                hoop.x = 100 + Math.random() * (window.innerWidth - hoop.width - 200);
+                // Teleport to random location with safe bounds
+                hoop.x = 120 + Math.random() * (window.innerWidth - hoop.width - 240);
                 hoop.y = hoop.baseY + (Math.random() - 0.5) * hoop.amplitude;
                 
                 // Visual effect for teleport
@@ -705,7 +730,7 @@ function updateHoopMovement() {
             
         case 'orbit':
             // NEW: Orbits around center of screen
-            const orbitRadius = Math.min(window.innerWidth, window.innerHeight) * 0.25;
+            const orbitRadius = Math.min(window.innerWidth, window.innerHeight) * 0.22;
             const centerX = window.innerWidth / 2;
             const centerY = hoop.baseY;
             hoop.x = centerX + Math.cos(hoop.patternTimer * 1.5) * orbitRadius - hoop.width/2;
@@ -713,9 +738,9 @@ function updateHoopMovement() {
             break;
             
         case 'earthquake':
-            // NEW: Violent shaking movement
+            // NEW: Violent shaking movement with bounds
             const baseX = window.innerWidth / 2 - hoop.width / 2;
-            hoop.x = baseX + (Math.random() - 0.5) * 80;
+            hoop.x = Math.max(80, Math.min(window.innerWidth - hoop.width - 80, baseX + (Math.random() - 0.5) * 80));
             hoop.y = hoop.baseY + (Math.random() - 0.5) * 40;
             // Add screen shake effect
             screenShake = Math.max(screenShake, 3);
@@ -723,14 +748,14 @@ function updateHoopMovement() {
             
         case 'wave':
             // NEW: Smooth wave motion across screen
-            hoop.x = (Math.sin(hoop.patternTimer) + 1) * (window.innerWidth - hoop.width) / 2;
+            hoop.x = 80 + (Math.sin(hoop.patternTimer) + 1) * (window.innerWidth - hoop.width - 160) / 2;
             hoop.y = hoop.baseY + Math.sin(hoop.patternTimer * 3) * hoop.amplitude * 0.4;
             break;
     }
     
-    // Keep hoop in bounds (with some margin)
-    hoop.x = Math.max(20, Math.min(window.innerWidth - hoop.width - 20, hoop.x));
-    hoop.y = Math.max(50, Math.min(window.innerHeight * 0.6, hoop.y));
+    // Enhanced bounds checking to prevent corner freezing
+    hoop.x = Math.max(80, Math.min(window.innerWidth - hoop.width - 80, hoop.x));
+    hoop.y = Math.max(80, Math.min(window.innerHeight * 0.5, hoop.y));
 }
 
 function endGame() {
@@ -815,9 +840,11 @@ function updateAiming(x, y) {
     aimCurrentX = x;
     aimCurrentY = y;
     
-    // Charge power while aiming
+    // Enhanced power system - increases while aiming, decreases when idle
     if (isPowerCharging) {
-        powerMeter = Math.min(300, powerMeter + 8);
+        powerMeter = Math.min(300, powerMeter + 6); // Slightly slower increase
+    } else {
+        powerMeter = Math.max(0, powerMeter - 2); // Decrease when not actively charging
     }
 }
 
@@ -1050,12 +1077,12 @@ function drawAimLine() {
     ctx.stroke();
     ctx.setLineDash([]);
     
-    // Mobile-optimized power meter bar
-    if (isPowerCharging) {
+    // Mobile-optimized power meter bar - positioned much higher to avoid instruction overlap
+    if (isPowerCharging || powerMeter > 0) {
         const barWidth = Math.min(isMobile ? 180 : 200, window.innerWidth * 0.6);
         const barHeight = isMobile ? 30 : 25;
         const barX = window.innerWidth / 2 - barWidth / 2;
-        const barY = window.innerHeight - (isMobile ? 180 : 140); // Much higher on mobile
+        const barY = window.innerHeight - (isMobile ? 250 : 140); // Much higher on mobile
         
         // Background
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
