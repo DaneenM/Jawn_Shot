@@ -51,6 +51,10 @@ let lastFrameTime = 0;
 const targetFPS = 60;
 const frameInterval = 1000 / targetFPS;
 
+// Mobile optimization variables
+let isMobile = false;
+let mobileScale = 1;
+
 // Philly sounds and memes
 const phillySounds = [
     "YERRR!", "JAWN!", "Go Birds!", "WOODER!", "That's Fire!", 
@@ -419,10 +423,20 @@ class Particle {
     }
 }
 
+// Detect mobile device
+function detectMobile() {
+    isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+               window.innerWidth <= 768;
+    mobileScale = isMobile ? Math.min(window.innerWidth / 375, 1) : 1;
+}
+
 // Initialize game
 function initGame() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
+    
+    // Detect mobile first
+    detectMobile();
     
     // Mobile-friendly canvas setup
     canvas.style.touchAction = 'none';
@@ -436,6 +450,9 @@ function initGame() {
 }
 
 function resizeCanvas() {
+    // Update mobile detection on resize
+    detectMobile();
+    
     // High DPI support for mobile
     const dpr = window.devicePixelRatio || 1;
     canvas.width = window.innerWidth * dpr;
@@ -446,7 +463,8 @@ function resizeCanvas() {
     
     ctx.scale(dpr, dpr);
     
-    hoop.y = window.innerHeight * 0.18;
+    // Mobile-optimized hoop positioning
+    hoop.y = window.innerHeight * (isMobile ? 0.15 : 0.18);
     hoop.baseY = hoop.y;
     if (hoop.x === 0) hoop.x = window.innerWidth / 2 - hoop.width / 2;
     
@@ -455,8 +473,9 @@ function resizeCanvas() {
 
 function createStars() {
     stars = [];
-    // Reduced star count for performance
-    for (let i = 0; i < 50; i++) {
+    // Reduced star count for performance, especially on mobile
+    const starCount = isMobile ? 30 : 50;
+    for (let i = 0; i < starCount; i++) {
         stars.push({
             x: Math.random() * window.innerWidth,
             y: Math.random() * window.innerHeight,
@@ -806,7 +825,7 @@ function shoot() {
     if (!isAiming || gameState !== 'playing') return;
     
     const shooterX = window.innerWidth / 2;
-    const shooterY = window.innerHeight - 60;
+    const shooterY = window.innerHeight - (isMobile ? 80 : 60); // Lower position on mobile
     
     const aimDistance = Math.sqrt(
         (aimCurrentX - aimStartX) ** 2 + (aimCurrentY - aimStartY) ** 2
@@ -828,9 +847,11 @@ function shoot() {
 
 function showSoundBubble(text) {
     const bubble = document.getElementById('soundBubble');
+    if (!bubble) return;
+    
     bubble.textContent = text;
     bubble.style.left = Math.random() * (window.innerWidth - 250) + 'px';
-    bubble.style.top = Math.random() * (window.innerHeight - 100) + 100 + 'px';
+    bubble.style.top = Math.random() * (window.innerHeight - 200) + 150 + 'px';
     bubble.style.transform = 'scale(1)';
     
     setTimeout(() => {
@@ -840,9 +861,11 @@ function showSoundBubble(text) {
 
 function showMemeBubble(text) {
     const bubble = document.getElementById('memeBubble');
+    if (!bubble) return;
+    
     bubble.textContent = text;
     bubble.style.left = '50%';
-    bubble.style.top = '30%';
+    bubble.style.top = isMobile ? '25%' : '30%';
     bubble.style.marginLeft = '-175px';
     bubble.style.transform = 'scale(1)';
     
@@ -858,8 +881,10 @@ function createScoreEffect(x, y, isPerfect = false) {
         ['#00ff88', '#ffffff', '#00cc6a'] : 
         ['#ff6b35', '#f7931e', '#ffffff'];
     
-    // Reduced particle count for performance
-    const particleCount = isPerfect ? 20 : 12; // Reduced from 40/25
+    // Reduced particle count for performance, especially on mobile
+    const particleCount = isMobile ? 
+        (isPerfect ? 15 : 8) : 
+        (isPerfect ? 20 : 12);
     
     for (let i = 0; i < particleCount; i++) {
         particles.push(new Particle(
@@ -983,8 +1008,9 @@ function drawModernHoop() {
     ctx.lineWidth = 2; // Reduced from 3
     ctx.lineCap = 'round';
     
-    for (let i = 0; i < 6; i++) { // Reduced from 10 to 6 strands
-        const x = hoop.x + 25 + (i * 15);
+    const netStrands = isMobile ? 4 : 6; // Even fewer strands on mobile
+    for (let i = 0; i < netStrands; i++) {
+        const x = hoop.x + 25 + (i * (hoop.width - 50) / (netStrands - 1));
         const sway = netSway * (i % 2 ? 1 : -1);
         
         ctx.beginPath();
@@ -1000,7 +1026,7 @@ function drawAimLine() {
     if (!isAiming) return;
     
     const shooterX = window.innerWidth / 2;
-    const shooterY = window.innerHeight - 60;
+    const shooterY = window.innerHeight - (isMobile ? 80 : 60);
     
     // Power meter visualization
     const powerPercent = powerMeter / 300;
@@ -1008,10 +1034,10 @@ function drawAimLine() {
     
     // Simplified trajectory arc
     ctx.strokeStyle = 'rgba(0, 255, 136, 0.7)';
-    ctx.lineWidth = 3; // Reduced from 4
+    ctx.lineWidth = isMobile ? 4 : 3;
     ctx.setLineDash([6, 3]); // Reduced dash size
     
-    const steps = 12; // Reduced from 20
+    const steps = isMobile ? 8 : 12; // Fewer steps on mobile
     ctx.beginPath();
     ctx.moveTo(shooterX, shooterY);
     
@@ -1024,15 +1050,15 @@ function drawAimLine() {
     ctx.stroke();
     ctx.setLineDash([]);
     
-    // Mobile-friendly power meter bar
+    // Mobile-optimized power meter bar
     if (isPowerCharging) {
-        const barWidth = Math.min(200, window.innerWidth * 0.6);
-        const barHeight = 25;
+        const barWidth = Math.min(isMobile ? 180 : 200, window.innerWidth * 0.6);
+        const barHeight = isMobile ? 30 : 25;
         const barX = window.innerWidth / 2 - barWidth / 2;
-        const barY = window.innerHeight - 140;
+        const barY = window.innerHeight - (isMobile ? 180 : 140); // Much higher on mobile
         
         // Background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.fillRect(barX - 5, barY - 5, barWidth + 10, barHeight + 10);
         
         // Power fill
@@ -1046,21 +1072,21 @@ function drawAimLine() {
         
         // Text
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 18px Arial';
+        ctx.font = `bold ${isMobile ? 20 : 18}px Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText('POWER', window.innerWidth / 2, barY - 15);
+        ctx.fillText('POWER', window.innerWidth / 2, barY - (isMobile ? 20 : 15));
     }
     
     // Target indicator - larger for mobile
-    const targetSize = 20 + powerPercent * 15;
+    const targetSize = isMobile ? 25 + powerPercent * 20 : 20 + powerPercent * 15;
     ctx.strokeStyle = powerColor;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = isMobile ? 5 : 4;
     ctx.beginPath();
     ctx.arc(aimCurrentX, aimCurrentY, targetSize, 0, Math.PI * 2);
     ctx.stroke();
     
     // Inner crosshairs
-    ctx.lineWidth = 3;
+    ctx.lineWidth = isMobile ? 4 : 3;
     ctx.beginPath();
     ctx.moveTo(aimCurrentX - targetSize/2, aimCurrentY);
     ctx.lineTo(aimCurrentX + targetSize/2, aimCurrentY);
@@ -1071,7 +1097,8 @@ function drawAimLine() {
 
 function drawShooter() {
     const shooterX = window.innerWidth / 2;
-    const shooterY = window.innerHeight - 60;
+    const shooterY = window.innerHeight - (isMobile ? 80 : 60);
+    const shooterRadius = isMobile ? 40 : 35;
     
     // Simplified shooter platform
     if (isJawnMode) {
@@ -1082,13 +1109,13 @@ function drawShooter() {
     // Simplified shooter gradient
     ctx.fillStyle = isJawnMode ? '#00ff88' : '#00cc6a';
     ctx.beginPath();
-    ctx.arc(shooterX, shooterY, 35, 0, Math.PI * 2); // Larger for mobile
+    ctx.arc(shooterX, shooterY, shooterRadius, 0, Math.PI * 2);
     ctx.fill();
     
     // Jawn mode effects - simplified
     if (isJawnMode) {
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 5;
+        ctx.lineWidth = isMobile ? 6 : 5;
         ctx.setLineDash([8, 8]);
         ctx.stroke();
         ctx.setLineDash([]);
@@ -1099,7 +1126,7 @@ function drawShooter() {
             ctx.strokeStyle = `rgba(0, 255, 136, ${0.3 - i * 0.15})`;
             ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(shooterX, shooterY, 40 + i * 12 + Math.sin(time + i) * 3, 0, Math.PI * 2);
+            ctx.arc(shooterX, shooterY, shooterRadius + 5 + i * 12 + Math.sin(time + i) * 3, 0, Math.PI * 2);
             ctx.stroke();
         }
     }
@@ -1107,16 +1134,16 @@ function drawShooter() {
     // Shooter outline
     ctx.shadowBlur = 0;
     ctx.strokeStyle = '#000';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = isMobile ? 5 : 4;
     ctx.beginPath();
-    ctx.arc(shooterX, shooterY, 35, 0, Math.PI * 2);
+    ctx.arc(shooterX, shooterY, shooterRadius, 0, Math.PI * 2);
     ctx.stroke();
     
     // Philadelphia logo/text - larger for mobile
     ctx.fillStyle = '#000';
-    ctx.font = 'bold 16px Arial';
+    ctx.font = `bold ${isMobile ? 20 : 16}px Arial`;
     ctx.textAlign = 'center';
-    ctx.fillText('PHI', shooterX, shooterY + 5);
+    ctx.fillText('PHI', shooterX, shooterY + (isMobile ? 7 : 5));
 }
 
 // Optimized game loop with frame rate limiting
@@ -1237,14 +1264,15 @@ function gameLoop(currentTime) {
             }
         }
 
-        // Update and draw particles - limit to 50 max for performance
+        // Update and draw particles - limit to 30 max on mobile for performance
+        const maxParticles = isMobile ? 30 : 50;
         particles = particles.filter(particle => {
             particle.update();
             particle.draw();
             return particle.life > 0;
         });
-        if (particles.length > 50) {
-            particles = particles.slice(-50); // Keep only the newest 50
+        if (particles.length > maxParticles) {
+            particles = particles.slice(-maxParticles); // Keep only the newest
         }
         
         // Update and draw coins
@@ -1254,10 +1282,10 @@ function gameLoop(currentTime) {
             
             // Auto-collect coins near shooter - larger radius for mobile
             const shooterX = window.innerWidth / 2;
-            const shooterY = window.innerHeight - 60;
+            const shooterY = window.innerHeight - (isMobile ? 80 : 60);
             const distance = Math.sqrt((coin.x - shooterX) ** 2 + (coin.y - shooterY) ** 2);
             
-            if (distance < 70 && !coin.collected) {
+            if (distance < (isMobile ? 90 : 70) && !coin.collected) {
                 coin.collected = true;
                 score += 5;
                 showSoundBubble("COIN! +5");
@@ -1274,10 +1302,10 @@ function gameLoop(currentTime) {
             
             // Auto-collect power-ups near shooter - larger radius for mobile
             const shooterX = window.innerWidth / 2;
-            const shooterY = window.innerHeight - 60;
+            const shooterY = window.innerHeight - (isMobile ? 80 : 60);
             const distance = Math.sqrt((powerUp.x - shooterX) ** 2 + (powerUp.y - shooterY) ** 2);
             
-            if (distance < 80) {
+            if (distance < (isMobile ? 100 : 80)) {
                 // Activate power-up
                 switch(powerUp.type) {
                     case 'slowmo':
@@ -1308,26 +1336,28 @@ function gameLoop(currentTime) {
             return powerUp.life > 0;
         });
         
-        // Draw UI overlays - mobile friendly sizes
+        // Draw UI overlays - mobile friendly sizes and positions
+        const baseY = isMobile ? 220 : 180;
+        
         if (multiplier > 1) {
             ctx.fillStyle = 'rgba(255, 107, 53, 0.8)';
-            ctx.font = 'bold 32px Arial';
+            ctx.font = `bold ${isMobile ? 36 : 32}px Arial`;
             ctx.textAlign = 'center';
-            ctx.fillText(`${multiplier}X MULTIPLIER!`, window.innerWidth / 2, 180);
+            ctx.fillText(`${multiplier}X MULTIPLIER!`, window.innerWidth / 2, baseY);
         }
         
         if (slowMotion) {
             ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
-            ctx.font = 'bold 28px Arial';
+            ctx.font = `bold ${isMobile ? 32 : 28}px Arial`;
             ctx.textAlign = 'center';
-            ctx.fillText('SLOW MOTION', window.innerWidth / 2, 220);
+            ctx.fillText('SLOW MOTION', window.innerWidth / 2, baseY + (isMobile ? 50 : 40));
         }
         
         if (comboMultiplier > 1) {
             ctx.fillStyle = 'rgba(255, 215, 0, 0.9)';
-            ctx.font = 'bold 24px Arial';
+            ctx.font = `bold ${isMobile ? 28 : 24}px Arial`;
             ctx.textAlign = 'center';
-            ctx.fillText(`COMBO ${comboMultiplier.toFixed(1)}X`, window.innerWidth / 2, 260);
+            ctx.fillText(`COMBO ${comboMultiplier.toFixed(1)}X`, window.innerWidth / 2, baseY + (isMobile ? 100 : 80));
         }
     }
 
